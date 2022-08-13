@@ -1,39 +1,49 @@
+from typing import Union
 
 
-def get_filter(data, value):
-    with open(data) as file:
-        res = filter(lambda line: value in line.lower(), file.readlines())
-        with open('result.txt', 'w') as res_file:
-            res_file.writelines(list(res))
+def get_filter(data: Union[list, map, filter, set], value: str) -> filter:
+    check_type(data)
+    if not isinstance(value, str):
+        raise TypeError
+    return filter(lambda line: value in line.lower(), data)
 
 
-def get_map(data, value):
-    with open(data) as file:
-        res = map(lambda line: parse_string(line)[value-1]+'\n', file.readlines())
-        with open('result.txt', 'w') as res_file:
-            res_file.writelines(list(res))
+def get_map(data: Union[list, map, filter, set], value: Union[str, int]) -> map:
+    check_type(data)
+    try:
+        value = int(value)
+    except Exception:
+        raise TypeError
+    return map(lambda line: parse_string(line)[value - 1] + '\n', data)
 
 
-def get_unique(data):
-    with open(data) as file:
-        res = set(file.readlines())
-        with open('result.txt', 'w') as res_file:
-            res_file.writelines(list(res))
+def get_unique(data: Union[list, map, filter, set], value=None) -> set:
+    check_type(data)
+    return set(data)
 
 
-def get_sort(data, asc_dsc):
-    with open(data) as file:
-        res = sorted(file.readlines(), reverse=True if asc_dsc == 'dsc' else False)
-        with open('result.txt', 'w') as res_file:
-            res_file.writelines(list(res))
+def get_sort(data: Union[list, map, filter, set], value: str) -> list:
+    check_type(data)
+    if value not in ['asc', 'decs']:
+        raise ValueError
+    return sorted(data, reverse=(value == 'desc'))
 
 
-def get_limit(data, limit):
-    with open(data) as file:
-        res = [text for num, text in enumerate(file.readlines(), 1) if num <= limit]
-        with open('result.txt', 'w') as res_file:
-            res_file.writelines(res)
+def get_limit(data: Union[list, map, filter, set], value: Union[str, int]) -> list:
+    check_type(data)
+    print(type(data))
+    try:
+        value = int(value)
+    except Exception:
+        raise TypeError
+    # return [text for num, text in enumerate(data, 1) if num <= int(value)]
+    return list(data)[:value]
 
 
-def parse_string(string):
+def parse_string(string: str) -> list:
     return string.split()
+
+
+def check_type(data):
+    if not isinstance(data, (list, map, filter, set)):
+        raise TypeError

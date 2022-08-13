@@ -9,17 +9,31 @@ app = Flask(__name__)
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
 
+def apply_filter(data_path):
+    choice_func = {
+        'filter': get_filter,
+        'map': get_map,
+        'unique': get_unique,
+        'sort': get_sort,
+        'limit': get_limit
+    }
+
+    with open(data_path) as file:
+        data = file.readlines()
+
+    for item in request.form:
+        if item[0:3] == 'cmd':
+            func = choice_func[request.form[item]]
+            num_cmd = item[3]
+            key_value = 'value' + num_cmd
+            value = request.form.get(key_value)
+            data = func(data, value)
+
+    return data
+
+
 @app.route('/perform_query', methods=['POST'])
 def perform_query():
-    cmd1 = request.form.get('cmd1')
-    cmd2 = request.form.get('cmd2')
-    value1 = request.form.get('value1')
-    print(f'value1:   {value1}')
-    value2 = request.form.get('value2')
-
-    value = [value1, value2]
-    cmd = [cmd1, cmd2]
-
     file_name = request.form.get('file_name')
 
     if file_name:
@@ -30,51 +44,8 @@ def perform_query():
     if not os.path.isfile(data_path):
         return f'файл {file_name} не найден', 400
 
-    # if len(cmd) > 0:
-    #     for item in cmd:
-
-    choice_func = {
-        'filter': [get_filter, data_path, value1],
-        'map': [get_map, data_path, int(value2)],
-        'unique': [get_unique, data_path, value1],
-        'sort': [get_sort, data_path, value1],
-        'limit': [get_limit,data_path, int(value2)]
-    }
-    # choice_func[cmd1][0](choice_func[cmd1][1], choice_func[cmd1][2])
-    # func = choice_func[cmd1]
-    # func[0](func[1], func[2])
-
-    if cmd1:
-        func = choice_func[cmd1]
-        func[0](func[1], func[2])
-
-
-    # if cmd1 == 'filter':
-    #     get_filter(data_path, value1)
-    #
-    # if cmd1 == 'map':
-    #     get_map(data_path, int(value1))
-    #
-    # if cmd1 == 'unique':
-    #     get_unique(data_path)
-    #
-    # if cmd1 == 'sort':
-    #     get_sort(data_path, value1)
-    #
-    # if cmd1 == 'limit':
-    #     get_limit(data_path, int(value1))
-
-    # return '', 200
-
-
-    # получить параметры query и file_name из request.args, при ошибке вернуть ошибку 400
-    # проверить, что файла file_name существует в папке DATA_DIR, при ошибке вернуть ошибку 400
-    # с помощью функционального программирования (функций filter, map), итераторов/генераторов сконструировать запрос
-    # вернуть пользователю сформированный результат
-    return app.response_class('', content_type="text/plain")
+    return app.response_class(apply_filter(data_path), content_type="text/plain")
 
 
 if __name__ == '__main__':
     app.run()
-
-
